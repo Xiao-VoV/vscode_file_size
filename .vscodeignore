@@ -10,4 +10,5 @@ node_modules/**
 package-lock.json
 *.vsix
 esbuild.mjs
+icon.jpeg
 **/yu.bak*

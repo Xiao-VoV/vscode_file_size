@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext): void {
     async (uri?: vscode.Uri) => {
       if (!uri) {
         void vscode.window.showWarningMessage(
-          'File Size Explorer: 请通过资源管理器右键菜单使用此命令。',
+          vscode.l10n.t('warn.useFromContextMenu'),
         );
         return;
       }
@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: `正在计算 ${name} 的大小…`,
+          title: vscode.l10n.t('progress.title', name),
           cancellable: true,
         },
         async (progress, token) => {
@@ -49,14 +49,22 @@ export function activate(context: vscode.ExtensionContext): void {
             const result = await getEntrySize(sizeFs, uri, token, {
               onProgress: (partial) => {
                 progress.report({
-                  message: `已扫描 ${partial.fileCount} 个文件（${formatBytes(partial.bytes)}）`,
+                  message: vscode.l10n.t(
+                    'progress.message',
+                    partial.fileCount.toString(),
+                    formatBytes(partial.bytes),
+                  ),
                 });
               },
             });
 
             const details =
               result.fileCount > 0 || result.dirCount > 0
-                ? `（${result.fileCount} 个文件，${result.dirCount} 个目录）`
+                ? vscode.l10n.t(
+                    'result.details',
+                    result.fileCount.toString(),
+                    result.dirCount.toString(),
+                  )
                 : '';
             void vscode.window.showInformationMessage(
               `${name}: ${formatBytes(result.bytes)}${details}`,
@@ -67,7 +75,7 @@ export function activate(context: vscode.ExtensionContext): void {
             }
             const message = err instanceof Error ? err.message : String(err);
             void vscode.window.showErrorMessage(
-              `File Size Explorer: 计算大小失败（${message}）`,
+              vscode.l10n.t('error.failed', message),
             );
           }
         },

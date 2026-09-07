@@ -1,0 +1,7 @@
+{
+  "warn.useFromContextMenu": "Please use this command from the Explorer context menu.",
+  "progress.title": "Calculating size of {0}…",
+  "progress.message": "Scanned {0} files ({1})",
+  "result.details": " ({0} files, {1} directories)",
+  "error.failed": "Size Peek: Failed to compute size ({0})"
+}

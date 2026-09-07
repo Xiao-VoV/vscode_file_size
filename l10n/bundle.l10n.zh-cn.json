@@ -1,0 +1,7 @@
+{
+  "warn.useFromContextMenu": "请通过资源管理器右键菜单使用此命令。",
+  "progress.title": "正在计算 {0} 的大小…",
+  "progress.message": "已扫描 {0} 个文件（{1}）",
+  "result.details": "（{0} 个文件，{1} 个目录）",
+  "error.failed": "Size Peek: 计算大小失败（{0}）"
+}

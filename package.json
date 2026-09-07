@@ -1,13 +1,13 @@
 {
   "name": "vscode-file-size",
-  "displayName": "File Size Explorer",
+  "displayName": "Size Peek",
   "description": "Right-click a file or folder in the Explorer to see its size. Works in Remote-SSH.",
   "version": "0.0.1",
-  "publisher": "your-publisher",
+  "publisher": "KennyXiao",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-publisher/vscode-file-size.git"
+    "url": "https://github.com/Xiao-VoV/vscode_file_size.git"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -19,6 +19,7 @@
     "workspace"
   ],
   "main": "./dist/extension.js",
+  "icon": "icon.png",
   "contributes": {
     "commands": [
       {
