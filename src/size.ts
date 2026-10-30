@@ -35,8 +35,12 @@ export interface CancellationTokenLike {
 
 export interface SizeResult {
   bytes: number;
+  /** Files whose size was successfully read. */
   fileCount: number;
+  /** Successfully enumerated directories, excluding the selected root. */
   dirCount: number;
+  /** Unreadable descendant entries; an unreadable subtree counts once. */
+  skippedCount: number;
 }
 
 export interface SizeOptions {
@@ -65,23 +69,16 @@ function throwIfCancelled(token?: CancellationTokenLike): void {
   }
 }
 
-async function safeStat<T>(fs: SizeFs<T>, path: T): Promise<SizeEntry | null> {
+async function readWithCancellation<T>(
+  read: () => Promise<T>,
+  token?: CancellationTokenLike,
+): Promise<T> {
+  throwIfCancelled(token);
   try {
-    return await fs.stat(path);
-  } catch {
-    // E.g. permission denied or a path that disappeared mid-walk.
-    return null;
-  }
-}
-
-async function safeReadDirectory<T>(
-  fs: SizeFs<T>,
-  path: T,
-): Promise<DirectoryEntry<T>[] | null> {
-  try {
-    return await fs.readDirectory(path);
-  } catch {
-    return null;
+    return await read();
+  } finally {
+    // Cancellation wins even when the pending filesystem operation rejects.
+    throwIfCancelled(token);
   }
 }
 
@@ -90,7 +87,8 @@ async function safeReadDirectory<T>(
  *
  * Symbolic links are never followed: they are skipped entirely so that cycles
  * cannot cause infinite loops and link targets are not double-counted.
- * Cancellation is checked before the root stat and before every entry.
+ * Root failures propagate; unreadable descendants produce a partial result.
+ * Cancellation is checked around every filesystem operation and before return.
  */
 export async function getEntrySize<T>(
   fs: SizeFs<T>,
@@ -98,57 +96,81 @@ export async function getEntrySize<T>(
   token?: CancellationTokenLike,
   options: SizeOptions = {},
 ): Promise<SizeResult> {
-  throwIfCancelled(token);
+  const result: SizeResult = { bytes: 0, fileCount: 0, dirCount: 0, skippedCount: 0 };
+  let lastReport = -Infinity;
 
-  const root = await safeStat(fs, path);
-  if (!root) {
-    return { bytes: 0, fileCount: 0, dirCount: 0 };
+  function reportProgress(final = false): void {
+    throwIfCancelled(token);
+    if (options.onProgress) {
+      const now = Date.now();
+      if (final || now - lastReport >= 100) {
+        lastReport = now;
+        options.onProgress({ ...result });
+      }
+    }
   }
+
+  function finish(): SizeResult {
+    reportProgress(true);
+    throwIfCancelled(token);
+    return { ...result };
+  }
+
+  const root = await readWithCancellation(() => fs.stat(path), token);
   if (isSymlink(root.type)) {
-    return { bytes: 0, fileCount: 0, dirCount: 0 };
+    return finish();
   }
   if (!isDirectory(root.type)) {
-    return { bytes: root.size, fileCount: 1, dirCount: 0 };
+    result.bytes = root.size;
+    result.fileCount = 1;
+    return finish();
   }
 
-  let bytes = 0;
-  let fileCount = 0;
-  let dirCount = 0;
-  const stack: T[] = [path];
-  let lastReport = 0;
+  const stack = [{ path, isRoot: true }];
 
   while (stack.length > 0) {
-    const current = stack.pop() as T;
-    const entries = await safeReadDirectory(fs, current);
-    if (!entries) {
+    throwIfCancelled(token);
+    const current = stack.pop()!;
+    let entries: DirectoryEntry<T>[];
+    try {
+      entries = await readWithCancellation(() => fs.readDirectory(current.path), token);
+    } catch (err) {
+      if (err instanceof SizeCancelledError || current.isRoot) {
+        throw err;
+      }
+      result.skippedCount += 1;
+      reportProgress();
       continue;
+    }
+    if (!current.isRoot) {
+      result.dirCount += 1;
     }
 
     for (const entry of entries) {
       throwIfCancelled(token);
-      if (isSymlink(entry.type)) {
-        continue;
-      }
-      if (isDirectory(entry.type)) {
-        dirCount += 1;
-        stack.push(entry.path);
-      } else {
-        fileCount += 1;
-        const stat = await safeStat(fs, entry.path);
-        if (stat) {
-          bytes += stat.size;
+      if (!isSymlink(entry.type)) {
+        if (isDirectory(entry.type)) {
+          stack.push({ path: entry.path, isRoot: false });
+        } else {
+          let stat: SizeEntry | undefined;
+          try {
+            stat = await readWithCancellation(() => fs.stat(entry.path), token);
+          } catch (err) {
+            if (err instanceof SizeCancelledError) {
+              throw err;
+            }
+            result.skippedCount += 1;
+          }
+          if (stat && !isSymlink(stat.type)) {
+            result.fileCount += 1;
+            result.bytes += stat.size;
+          }
         }
       }
+      reportProgress();
     }
-
-    if (options.onProgress) {
-      const now = Date.now();
-      if (now - lastReport > 100) {
-        lastReport = now;
-        options.onProgress({ bytes, fileCount, dirCount });
-      }
-    }
+    reportProgress();
   }
 
-  return { bytes, fileCount, dirCount };
+  return finish();
 }

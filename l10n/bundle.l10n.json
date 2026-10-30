@@ -1,7 +1,8 @@
 {
-  "warn.useFromContextMenu": "Please use this command from the Explorer context menu.",
-  "progress.title": "Calculating size of {0}…",
-  "progress.message": "Scanned {0} files ({1})",
-  "result.details": " ({0} files, {1} directories)",
-  "error.failed": "Size Peek: Failed to compute size ({0})"
+  "Please use this command from the Explorer context menu.": "Please use this command from the Explorer context menu.",
+  "Calculating size of {0}…": "Calculating size of {0}…",
+  "Scanned {0} files ({1})": "Scanned {0} files ({1})",
+  " ({0} files, {1} directories)": " ({0} files, {1} directories)",
+  "{0} — Partial size: {1} entries could not be read.": "{0} — Partial size: {1} entries could not be read.",
+  "Size Peek: Failed to compute size ({0})": "Size Peek: Failed to compute size ({0})"
 }

@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext): void {
     async (uri?: vscode.Uri) => {
       if (!uri) {
         void vscode.window.showWarningMessage(
-          vscode.l10n.t('warn.useFromContextMenu'),
+          vscode.l10n.t('Please use this command from the Explorer context menu.'),
         );
         return;
       }
@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: vscode.l10n.t('progress.title', name),
+          title: vscode.l10n.t('Calculating size of {0}…', name),
           cancellable: true,
         },
         async (progress, token) => {
@@ -50,7 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
               onProgress: (partial) => {
                 progress.report({
                   message: vscode.l10n.t(
-                    'progress.message',
+                    'Scanned {0} files ({1})',
                     partial.fileCount.toString(),
                     formatBytes(partial.bytes),
                   ),
@@ -58,24 +58,37 @@ export function activate(context: vscode.ExtensionContext): void {
               },
             });
 
+            if (token.isCancellationRequested) {
+              return;
+            }
+
             const details =
               result.fileCount > 0 || result.dirCount > 0
                 ? vscode.l10n.t(
-                    'result.details',
+                    ' ({0} files, {1} directories)',
                     result.fileCount.toString(),
                     result.dirCount.toString(),
                   )
                 : '';
-            void vscode.window.showInformationMessage(
-              `${name}: ${formatBytes(result.bytes)}${details}`,
-            );
+            const summary = `${name}: ${formatBytes(result.bytes)}${details}`;
+            if (result.skippedCount > 0) {
+              void vscode.window.showWarningMessage(
+                vscode.l10n.t(
+                  '{0} — Partial size: {1} entries could not be read.',
+                  summary,
+                  result.skippedCount.toString(),
+                ),
+              );
+            } else {
+              void vscode.window.showInformationMessage(summary);
+            }
           } catch (err) {
             if (err instanceof SizeCancelledError || token.isCancellationRequested) {
               return;
             }
             const message = err instanceof Error ? err.message : String(err);
             void vscode.window.showErrorMessage(
-              vscode.l10n.t('error.failed', message),
+              vscode.l10n.t('Size Peek: Failed to compute size ({0})', message),
             );
           }
         },

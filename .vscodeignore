@@ -7,6 +7,11 @@ tsconfig.json
 node_modules/**
 .gitignore
 .reasonix/**
+.trellis/**
+.agents/**
+.codex/**
+AGENTS.md
+.gitattributes
 package-lock.json
 *.vsix
 esbuild.mjs

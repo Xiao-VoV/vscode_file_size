@@ -1,7 +1,8 @@
 {
-  "warn.useFromContextMenu": "请通过资源管理器右键菜单使用此命令。",
-  "progress.title": "正在计算 {0} 的大小…",
-  "progress.message": "已扫描 {0} 个文件（{1}）",
-  "result.details": "（{0} 个文件，{1} 个目录）",
-  "error.failed": "Size Peek: 计算大小失败（{0}）"
+  "Please use this command from the Explorer context menu.": "请通过资源管理器右键菜单使用此命令。",
+  "Calculating size of {0}…": "正在计算 {0} 的大小…",
+  "Scanned {0} files ({1})": "已扫描 {0} 个文件（{1}）",
+  " ({0} files, {1} directories)": "（{0} 个文件，{1} 个目录）",
+  "{0} — Partial size: {1} entries could not be read.": "{0} — 大小统计不完整：有 {1} 个条目无法读取。",
+  "Size Peek: Failed to compute size ({0})": "Size Peek: 计算大小失败（{0}）"
 }

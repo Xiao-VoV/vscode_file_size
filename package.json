@@ -19,6 +19,7 @@
     "workspace"
   ],
   "main": "./dist/extension.js",
+  "l10n": "./l10n",
   "icon": "icon.png",
   "contributes": {
     "commands": [
@@ -41,6 +42,8 @@
     "compile": "esbuild src/extension.ts --bundle --external:vscode --format=cjs --platform=node --sourcemap --outfile=dist/extension.js",
     "watch": "npm run compile -- --watch",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "vscode:prepublish": "npm run typecheck && npm run compile",
     "package": "vsce package"
   },
   "devDependencies": {

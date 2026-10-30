@@ -12,7 +12,9 @@ A VS Code extension to view the size of files and folders directly from the Expl
 ## Installation & Development
 
 ```bash
-npm install
+npm ci
+npm test
+npm run typecheck
 npm run compile     # builds dist/extension.js
 ```
 
@@ -21,7 +23,7 @@ Debug locally: open this project in VS Code and press `F5`.
 Package for publishing:
 
 ```bash
-npm run package    # produces a .vsix
+npm run package    # type-checks, builds current source, and produces a .vsix
 ```
 
 ## Usage
@@ -29,12 +31,13 @@ npm run package    # produces a .vsix
 1. Right-click a file or folder in the Explorer.
 2. Choose **Show Size**.
 3. The total size (e.g. `12.3 MB`) is shown in a notification; large directories show progress and file counts.
+4. If some entries cannot be read, a warning shows the partial size and the number of skipped entries. An unreadable selected file or directory produces an error.
 
 ## Known Limitations
 
-- Files/directories without read permission are skipped (does not affect the overall total).
+- Unreadable descendant files/directories are skipped, so the displayed total is incomplete. Each unreadable subtree counts as one skipped entry; its contents are unknown. File and directory counts include only successfully scanned entries and exclude the selected root directory.
 - Symbolic links are not followed, to avoid cycles and double-counting.
-- Scanning large directories (e.g. `node_modules`) can take time; use the progress bar to cancel.
+- Scanning large directories (e.g. `node_modules`) can take time; use the progress bar to cancel. A pending filesystem operation must settle before cancellation can stop the scan; no result is displayed after cancellation.
 
 ## Remote (Remote-SSH)
 
