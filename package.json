@@ -2,7 +2,7 @@
   "name": "vscode-file-size",
   "displayName": "Size Peek",
   "description": "Right-click a file or folder in the Explorer to see its size. Works in Remote-SSH.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "KennyXiao",
   "license": "MIT",
   "repository": {
